@@ -1,117 +1,96 @@
-"""
-pip._vendor is for vendoring dependencies of pip to prevent needing pip to
-depend on something external.
-
-Files inside of pip._vendor should be considered immutable and should only be
-updated to versions from upstream.
-"""
-from __future__ import absolute_import
-
-import glob
-import os.path
-import sys
-
-# Downstream redistributors which have debundled our dependencies should also
-# patch this value to be true. This will trigger the additional patching
-# to cause things like "six" to be available as pip.
-DEBUNDLED = False
-
-# By default, look in this directory for a bunch of .whl files which we will
-# add to the beginning of sys.path before attempting to import anything. This
-# is done to support downstream re-distributors like Debian and Fedora who
-# wish to create their own Wheels for our dependencies to aid in debundling.
-WHEEL_DIR = os.path.abspath(os.path.dirname(__file__))
+# testing/__init__.py
+# Copyright (C) 2005-2025 the SQLAlchemy authors and contributors
+# <see AUTHORS file>
+#
+# This module is part of SQLAlchemy and is released under
+# the MIT License: https://www.opensource.org/licenses/mit-license.php
+# mypy: ignore-errors
 
 
-# Define a small helper function to alias our vendored modules to the real ones
-# if the vendored ones do not exist. This idea of this was taken from
-# https://github.com/kennethreitz/requests/pull/2567.
-def vendored(modulename):
-    vendored_name = "{0}.{1}".format(__name__, modulename)
+from unittest import mock
 
-    try:
-        __import__(modulename, globals(), locals(), level=0)
-    except ImportError:
-        # We can just silently allow import failures to pass here. If we
-        # got to this point it means that ``import pip._vendor.whatever``
-        # failed and so did ``import whatever``. Since we're importing this
-        # upfront in an attempt to alias imports, not erroring here will
-        # just mean we get a regular import error whenever pip *actually*
-        # tries to import one of these modules to use it, which actually
-        # gives us a better error message than we would have otherwise
-        # gotten.
-        pass
-    else:
-        sys.modules[vendored_name] = sys.modules[modulename]
-        base, head = vendored_name.rsplit(".", 1)
-        setattr(sys.modules[base], head, sys.modules[modulename])
+from . import config
+from .assertions import assert_raises
+from .assertions import assert_raises_context_ok
+from .assertions import assert_raises_message
+from .assertions import assert_raises_message_context_ok
+from .assertions import assert_warns
+from .assertions import assert_warns_message
+from .assertions import AssertsCompiledSQL
+from .assertions import AssertsExecutionResults
+from .assertions import ComparesIndexes
+from .assertions import ComparesTables
+from .assertions import emits_warning
+from .assertions import emits_warning_on
+from .assertions import eq_
+from .assertions import eq_ignore_whitespace
+from .assertions import eq_regex
+from .assertions import expect_deprecated
+from .assertions import expect_deprecated_20
+from .assertions import expect_raises
+from .assertions import expect_raises_message
+from .assertions import expect_warnings
+from .assertions import in_
+from .assertions import int_within_variance
+from .assertions import is_
+from .assertions import is_false
+from .assertions import is_instance_of
+from .assertions import is_none
+from .assertions import is_not
+from .assertions import is_not_
+from .assertions import is_not_none
+from .assertions import is_true
+from .assertions import le_
+from .assertions import ne_
+from .assertions import not_in
+from .assertions import not_in_
+from .assertions import startswith_
+from .assertions import uses_deprecated
+from .config import add_to_marker
+from .config import async_test
+from .config import combinations
+from .config import combinations_list
+from .config import db
+from .config import fixture
+from .config import requirements as requires
+from .config import skip_test
+from .config import Variation
+from .config import variation
+from .config import variation_fixture
+from .exclusions import _is_excluded
+from .exclusions import _server_version
+from .exclusions import against as _against
+from .exclusions import db_spec
+from .exclusions import exclude
+from .exclusions import fails
+from .exclusions import fails_if
+from .exclusions import fails_on
+from .exclusions import fails_on_everything_except
+from .exclusions import future
+from .exclusions import only_if
+from .exclusions import only_on
+from .exclusions import skip
+from .exclusions import skip_if
+from .schema import eq_clause_element
+from .schema import eq_type_affinity
+from .util import adict
+from .util import fail
+from .util import flag_combinations
+from .util import force_drop_names
+from .util import lambda_combinations
+from .util import metadata_fixture
+from .util import provide_metadata
+from .util import resolve_lambda
+from .util import rowset
+from .util import run_as_contextmanager
+from .util import skip_if_timeout
+from .util import teardown_events
+from .warnings import assert_warnings
+from .warnings import warn_test_suite
 
 
-# If we're operating in a debundled setup, then we want to go ahead and trigger
-# the aliasing of our vendored libraries as well as looking for wheels to add
-# to our sys.path. This will cause all of this code to be a no-op typically
-# however downstream redistributors can enable it in a consistent way across
-# all platforms.
-if DEBUNDLED:
-    # Actually look inside of WHEEL_DIR to find .whl files and add them to the
-    # front of our sys.path.
-    sys.path[:] = glob.glob(os.path.join(WHEEL_DIR, "*.whl")) + sys.path
+def against(*queries):
+    return _against(config._current, *queries)
 
-    # Actually alias all of our vendored dependencies.
-    vendored("cachecontrol")
-    vendored("certifi")
-    vendored("dependency-groups")
-    vendored("distlib")
-    vendored("distro")
-    vendored("packaging")
-    vendored("packaging.version")
-    vendored("packaging.specifiers")
-    vendored("pkg_resources")
-    vendored("platformdirs")
-    vendored("progress")
-    vendored("pyproject_hooks")
-    vendored("requests")
-    vendored("requests.exceptions")
-    vendored("requests.packages")
-    vendored("requests.packages.urllib3")
-    vendored("requests.packages.urllib3._collections")
-    vendored("requests.packages.urllib3.connection")
-    vendored("requests.packages.urllib3.connectionpool")
-    vendored("requests.packages.urllib3.contrib")
-    vendored("requests.packages.urllib3.contrib.ntlmpool")
-    vendored("requests.packages.urllib3.contrib.pyopenssl")
-    vendored("requests.packages.urllib3.exceptions")
-    vendored("requests.packages.urllib3.fields")
-    vendored("requests.packages.urllib3.filepost")
-    vendored("requests.packages.urllib3.packages")
-    vendored("requests.packages.urllib3.packages.ordered_dict")
-    vendored("requests.packages.urllib3.packages.six")
-    vendored("requests.packages.urllib3.packages.ssl_match_hostname")
-    vendored("requests.packages.urllib3.packages.ssl_match_hostname."
-             "_implementation")
-    vendored("requests.packages.urllib3.poolmanager")
-    vendored("requests.packages.urllib3.request")
-    vendored("requests.packages.urllib3.response")
-    vendored("requests.packages.urllib3.util")
-    vendored("requests.packages.urllib3.util.connection")
-    vendored("requests.packages.urllib3.util.request")
-    vendored("requests.packages.urllib3.util.response")
-    vendored("requests.packages.urllib3.util.retry")
-    vendored("requests.packages.urllib3.util.ssl_")
-    vendored("requests.packages.urllib3.util.timeout")
-    vendored("requests.packages.urllib3.util.url")
-    vendored("resolvelib")
-    vendored("rich")
-    vendored("rich.console")
-    vendored("rich.highlighter")
-    vendored("rich.logging")
-    vendored("rich.markup")
-    vendored("rich.progress")
-    vendored("rich.segment")
-    vendored("rich.style")
-    vendored("rich.text")
-    vendored("rich.traceback")
-    if sys.version_info < (3, 11):
-        vendored("tomli")
-    vendored("truststore")
-    vendored("urllib3")
+
+crashes = skip
